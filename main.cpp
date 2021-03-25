@@ -1,41 +1,36 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QtWidgets>
-#include "generalsubsrciberwidget.h"
+#include "window.h"
 
 #include "UbiForm/Component.h"
 
 struct startupInfo{
     Component * component;
-    QWidget * window;
-    int* nextPositionX;
-    int* nextPositionY;
+    Window * window;
+    int labelVal = 0;
 };
 
-void generalSubscirber(Endpoint* endpoint, void* userData){
+void generalSubscriber(Endpoint* endpoint, void* userData){
     startupInfo* s = static_cast<startupInfo*>(userData);
     auto dre = s->component->castToDataReceiverEndpoint(endpoint);
 
-    QLabel label(s->window);
-    label.move(*(s->nextPositionX),*(s->nextPositionY));
-    s->nextPositionY += 20;
-    QString initText("Started endpoint: ");
-    initText.append(dre->getEndpointId().c_str());
-    label.setText(initText);
-    label.show();
-    while (true){
-        QString newText;
-        try{
-            auto message = dre->receiveMessage();
-            newText.append(message->stringify().c_str());
-        }catch(ValidationError &e){
-            newText.append("Validation error of received message: ");
-            newText.append(e.what());
-        }catch(std::logic_error &e){
-            // NNG error or SocketOpen error means break
+    int thisLabelVal = s->labelVal;
+    s->labelVal++;
+    emit s->window->createNewLabel();
+    emit s->window->updateText("Connection made",thisLabelVal);
+
+    while(true){
+        try {
+            auto msg = dre->receiveMessage();
+            std::cout << "Received:" << msg->stringify() << std::endl;
+            emit s->window->updateText(QString::fromStdString(msg->stringify()),thisLabelVal);
+        } catch (ValidationError &e){
+            emit s->window->updateText(QString::fromUtf8(e.what()), thisLabelVal);
+        } catch (std::logic_error &e) {
+            std::cout << "Receive ending due to: " << e.what() << std::endl;
             break;
         }
-        label.setText(newText);
     }
 }
 
@@ -47,21 +42,19 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    QWidget* window = new QWidget;
-    window->resize(320, 240);
+    Window* window = new Window;
     window->show();
-    window->setWindowTitle(
-        QApplication::translate("toplevel", "Top-level widget"));
 
 
     Component* component = new Component;
     component->getComponentManifest().setName("LifeHub");
     std::shared_ptr<EndpointSchema> es = std::make_shared<EndpointSchema>();
-    component->getComponentManifest().addEndpoint(SocketType::Subscriber, "general",es, nullptr);
+    component->getComponentManifest().addEndpoint(ConnectionParadigm::Subscriber, "general",es, nullptr);
     component->startBackgroundListen();
 
+
     try{
-        component->getResourceDiscoveryConnectionEndpoint().registerWithHub("tcp://192.168.1.236:7999");
+        component->getResourceDiscoveryConnectionEndpoint().registerWithHub("tcp://192.168.1.155:7999");
     }catch(std::logic_error &e){
         // EMPTY
     }
@@ -70,13 +63,14 @@ int main(int argc, char *argv[])
         component->getResourceDiscoveryConnectionEndpoint().searchForResourceDiscoveryHubs();
     }
 
-    startupInfo* s = new startupInfo();
-    s->component = component;
-    s->window = window;
-    s->nextPositionX = new int(10);
-    s->nextPositionY = new int(10);
 
-    component->registerStartupFunction("general",generalSubscirber, s);
+    startupInfo* s = new startupInfo();
+    s->window = window;
+    s->component = component;
+
+    component->registerStartupFunction("general",generalSubscriber, s);
+
+    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",39427,"general","weatherPublisher");
 
     return app.exec();
 }
