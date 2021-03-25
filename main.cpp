@@ -17,13 +17,39 @@ void generalSubscriber(Endpoint* endpoint, void* userData){
 
     int thisLabelVal = s->labelVal;
     s->labelVal++;
-    emit s->window->createNewLabel(1);
+    std::shared_ptr<EndpointSchema> schema = s->component->getComponentManifest().getReceiverSchema(endpoint->getEndpointType());
+    int numEntries = schema->getAllProperties().size();
+    emit s->window->createNewLabel(numEntries);
     emit s->window->updateText("Connection made",thisLabelVal);
 
     while(true){
         try {
             auto msg = dre->receiveMessage();
-            emit s->window->updateText(QString::fromStdString(msg->stringify()),thisLabelVal);
+            std::string output;
+            for(const std::string& key : msg->getKeys()){
+                output.append(key).append(" : ");
+                try{
+                    switch(schema->getValueType(key)){
+                    case ValueType::String:
+                        output.append("\"").append(msg->getString(key)).append("\"\n");
+                        break;
+                    case ValueType::Array:
+                        output.append("Array\n");
+                        break;
+                    case ValueType::Object:
+                        output.append(msg->getMoveObject(key)->stringify()).append("\n");
+                        break;
+                    case ValueType::Number:
+                        output.append(std::to_string(msg->getInteger(key))).append("\n");
+                        break;
+                    default:
+                        break;
+                    }
+                } catch (AccessError& e){
+                    continue;
+                }
+            }
+            emit s->window->updateText(QString::fromStdString(output),thisLabelVal);
         } catch (ValidationError &e){
             emit s->window->updateText(QString::fromUtf8(e.what()), thisLabelVal);
         } catch (std::logic_error &e) {
@@ -39,7 +65,7 @@ void notificationSubscriber(Endpoint* endpoint, void* userData){
 
     int thisLabelVal = s->labelVal;
     s->labelVal++;
-    emit s->window->createNewLabel(3);
+    emit s->window->createNewLabel(4);
     emit s->window->updateText("Connection made",thisLabelVal);
 
     while(true){
@@ -53,6 +79,8 @@ void notificationSubscriber(Endpoint* endpoint, void* userData){
                 int b = colour->getInteger("b");
                 QColor c(r,g,b);
                 emit s->window->updateColour(c, thisLabelVal);
+            }else{
+                emit s->window->updateColour(QColor(0,0,0), thisLabelVal);
             }
             std::string output;
             if(msg->hasMember("phoneName")){
