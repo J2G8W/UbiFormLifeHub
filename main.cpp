@@ -17,13 +17,51 @@ void generalSubscriber(Endpoint* endpoint, void* userData){
 
     int thisLabelVal = s->labelVal;
     s->labelVal++;
-    emit s->window->createNewLabel();
+    emit s->window->createNewLabel(1);
     emit s->window->updateText("Connection made",thisLabelVal);
 
     while(true){
         try {
             auto msg = dre->receiveMessage();
             emit s->window->updateText(QString::fromStdString(msg->stringify()),thisLabelVal);
+        } catch (ValidationError &e){
+            emit s->window->updateText(QString::fromUtf8(e.what()), thisLabelVal);
+        } catch (std::logic_error &e) {
+            std::cout << "Receive ending due to: " << e.what() << std::endl;
+            break;
+        }
+    }
+}
+
+void notificationSubscriber(Endpoint* endpoint, void* userData){
+    startupInfo* s = static_cast<startupInfo*>(userData);
+    auto dre = s->component->castToDataReceiverEndpoint(endpoint);
+
+    int thisLabelVal = s->labelVal;
+    s->labelVal++;
+    emit s->window->createNewLabel(3);
+    emit s->window->updateText("Connection made",thisLabelVal);
+
+    while(true){
+        try {
+            auto msg = dre->receiveMessage();
+
+            if(msg->hasMember("colour")){
+                auto colour = msg->getMoveObject("colour");
+                int r = colour->getInteger("r");
+                int g = colour->getInteger("g");
+                int b = colour->getInteger("b");
+                QColor c(r,g,b);
+                emit s->window->updateColour(c, thisLabelVal);
+            }
+            std::string output;
+            if(msg->hasMember("phoneName")){
+                output.append("Phone Name: ").append(msg->getString("phoneName")).append("\n");
+            }
+            output.append("App: ").append(msg->getString("appName")).append("\n");
+            output.append("Message: ").append(msg->getString("messageText")).append("\n");
+
+            emit s->window->updateText(QString::fromStdString(output),thisLabelVal);
         } catch (ValidationError &e){
             emit s->window->updateText(QString::fromUtf8(e.what()), thisLabelVal);
         } catch (std::logic_error &e) {
@@ -72,9 +110,10 @@ int main(int argc, char *argv[])
     s->component = component;
 
     component->registerStartupFunction("weatherSubscriber",generalSubscriber, s);
+    component->registerStartupFunction("notificationSubscriber",notificationSubscriber, s);
 
-    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",54889,"weatherSubscriber","weatherPublisher");
-    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",7039,"weatherSubscriber","weatherPublisher");
+    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",48459,"weatherSubscriber","weatherPublisher");
+    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.236",8000,"notificationSubscriber","notificationPublisher");
 
     return app.exec();
 }
