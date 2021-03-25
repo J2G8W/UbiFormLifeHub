@@ -59,7 +59,8 @@ void notificationSubscriber(Endpoint* endpoint, void* userData){
                 output.append("Phone Name: ").append(msg->getString("phoneName")).append("\n");
             }
             output.append("App: ").append(msg->getString("appName")).append("\n");
-            output.append("Message: ").append(msg->getString("messageText")).append("\n");
+            output.append("Title: ").append(msg->getString("messageTitle")).append("\n");
+            output.append("Text: ").append(msg->getString("messageText")).append("\n");
 
             emit s->window->updateText(QString::fromStdString(output),thisLabelVal);
         } catch (ValidationError &e){
