@@ -23,7 +23,6 @@ void generalSubscriber(Endpoint* endpoint, void* userData){
     while(true){
         try {
             auto msg = dre->receiveMessage();
-            std::cout << "Received:" << msg->stringify() << std::endl;
             emit s->window->updateText(QString::fromStdString(msg->stringify()),thisLabelVal);
         } catch (ValidationError &e){
             emit s->window->updateText(QString::fromUtf8(e.what()), thisLabelVal);
@@ -47,9 +46,13 @@ int main(int argc, char *argv[])
 
 
     Component* component = new Component;
-    component->getComponentManifest().setName("LifeHub");
-    std::shared_ptr<EndpointSchema> es = std::make_shared<EndpointSchema>();
-    component->getComponentManifest().addEndpoint(ConnectionParadigm::Subscriber, "general",es, nullptr);
+    FILE* fp = fopen("Manifest.json", "r");
+    if(fp == nullptr){
+        std::cerr << "Unable to find Manifest.json" << std::endl;
+        exit(-1);
+    }
+    component->specifyManifest(fp);
+    fclose(fp);
     component->startBackgroundListen();
 
 
@@ -68,9 +71,10 @@ int main(int argc, char *argv[])
     s->window = window;
     s->component = component;
 
-    component->registerStartupFunction("general",generalSubscriber, s);
+    component->registerStartupFunction("weatherSubscriber",generalSubscriber, s);
 
-    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",39427,"general","weatherPublisher");
+    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",54889,"weatherSubscriber","weatherPublisher");
+    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",7039,"weatherSubscriber","weatherPublisher");
 
     return app.exec();
 }

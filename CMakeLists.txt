@@ -30,7 +30,6 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Widgets REQUIRED)
 set(PROJECT_SOURCES
         main.cpp
         qml.qrc
-        generalsubsrciberwidget.cpp
         window.cpp
 )
 
@@ -61,3 +60,5 @@ target_compile_definitions(UbiFormDesktopUI
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(UbiFormDesktopUI
   PRIVATE Qt${QT_VERSION_MAJOR}::Core  Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Widgets UbiForm)
+
+configure_file(Manifest.json ${CMAKE_CURRENT_BINARY_DIR}/Manifest.json COPYONLY)

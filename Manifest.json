@@ -1,0 +1,52 @@
+{
+  "name": "LifeHub",
+  "schemas": {
+    "notificationReceiver": {
+      "connectionParadigm": "subscriber",
+      "receive": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+          "colour": {
+            "type": "object",
+            "properties": {
+              "r": {"type":"number"},
+              "g": {"type":"number"},
+              "b": {"type":"number"}
+            },
+            "required": [
+              "r",
+              "g",
+              "b"
+            ]
+          },
+          "appName": {
+            "type": "string"
+          },
+          "messageText": {
+            "type": "string"
+          },
+          "phoneName": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          }
+        },
+        "required": ["appName","messageText"]
+      }
+    },
+	"weatherSubscriber" :{
+      "connectionParadigm" : "subscriber",
+      "receive" : {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties" : {
+          "temperature" : {"type":"number"},
+          "humidity" : {"type":"number"}
+        },
+        "required" : ["temperature"]
+      }
+    }
+  }
+}
