@@ -38,18 +38,6 @@
         },
         "required": ["appName","messageText","messageTitle"]
       }
-    },
-	"weatherSubscriber" :{
-      "connectionParadigm" : "subscriber",
-      "receive" : {
-        "$schema": "http://json-schema.org/draft-04/schema#",
-        "type": "object",
-        "properties" : {
-          "temperature" : {"type":"number"},
-          "humidity" : {"type":"number"}
-        },
-        "required" : ["temperature"]
-      }
     }
   }
 }

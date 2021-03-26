@@ -59,6 +59,15 @@ void generalSubscriber(Endpoint* endpoint, void* userData){
     }
 }
 
+
+void endpointAdditionCallback(std::string endpointType, void* userData){
+    startupInfo* s = static_cast<startupInfo*>(userData);
+    if (s->component->getComponentManifest().hasEndpoint(endpointType) &&
+            s->component->getComponentManifest().getConnectionParadigm(endpointType) == "subscriber"){
+        s->component->registerStartupFunction(endpointType,generalSubscriber,userData);
+    }
+}
+
 void notificationSubscriber(Endpoint* endpoint, void* userData){
     startupInfo* s = static_cast<startupInfo*>(userData);
     auto dre = s->component->castToDataReceiverEndpoint(endpoint);
@@ -124,7 +133,7 @@ int main(int argc, char *argv[])
 
 
     try{
-        component->getResourceDiscoveryConnectionEndpoint().registerWithHub("tcp://192.168.1.155:7999");
+        component->getResourceDiscoveryConnectionEndpoint().registerWithHub("tcp://192.168.1.236:7999");
     }catch(std::logic_error &e){
         // EMPTY
     }
@@ -138,11 +147,12 @@ int main(int argc, char *argv[])
     s->window = window;
     s->component = component;
 
-    component->registerStartupFunction("weatherSubscriber",generalSubscriber, s);
+    //component->registerStartupFunction("weatherSubscriber",generalSubscriber, s);
     component->registerStartupFunction("notificationSubscriber",notificationSubscriber, s);
 
-    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",48459,"weatherSubscriber","weatherPublisher");
-    component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.236",8000,"notificationSubscriber","notificationPublisher");
+    component->getComponentManifest().registerEndpointAdditionCallback(endpointAdditionCallback,s);
+    //component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.155",48459,"weatherSubscriber","weatherPublisher");
+    //component->getBackgroundRequester().requestRemoteListenThenDial("tcp://192.168.1.236",8000,"notificationSubscriber","notificationPublisher");
 
     return app.exec();
 }
