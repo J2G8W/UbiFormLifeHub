@@ -21,7 +21,8 @@ ninja
 ```
 
 ## Usage example
-The manifest shows the two endpoint communications available with the sensor
+[Usage Example](https://user-images.githubusercontent.com/44195342/113888545-5888be80-97ba-11eb-90e5-eb6c35ffff5b.mp4
+)
 
 ## Release History
 
