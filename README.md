@@ -21,12 +21,15 @@ ninja
 ```
 
 ## Usage example
-[Usage Example](https://user-images.githubusercontent.com/44195342/113888545-5888be80-97ba-11eb-90e5-eb6c35ffff5b.mp4
-)
+Video hosted on YouTube - clicking the image will take you to YouTube
+[![Usage Example](https://img.youtube.com/vi/pDUWzyeSFu4/0.jpg)](https://youtu.be/pDUWzyeSFu4)
+
+
 
 ## Release History
 
 * 0.1.0
+
     * The first proper release
 * 0.0.1
     * Work in progress
