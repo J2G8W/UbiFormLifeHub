@@ -22,6 +22,8 @@ ninja
 
 ## Usage example
 Video hosted on YouTube - clicking the image will take you to YouTube
+
+
 [![Usage Example](https://img.youtube.com/vi/pDUWzyeSFu4/0.jpg)](https://youtu.be/pDUWzyeSFu4)
 
 
